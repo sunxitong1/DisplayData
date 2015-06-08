@@ -14,6 +14,7 @@ class CDisplayDataDlg : public CDialogEx
 public:
 	//图像显示变量
 	HWND m_hPE; //采集数据图像显示
+	RECT m_rect;
 	int m_nRealTimeCounter;//
 	int m_nSinCounter;
 
@@ -32,8 +33,6 @@ public:
 
 //数据存储
 	int m_bStartSave;
-
-
 
 
 	CDisplayDataDlg(CWnd* pParent = NULL);	// standard constructor
@@ -68,4 +67,9 @@ public:
 	CComboBox m_ComPortNum;
 	afx_msg void OnBnClickedButtonComOpen();
 	afx_msg void OnBnClickedButtonDatSave();
+	void RealtimeDisplay_Init(void);
+	void StaticDisplay_Init(void);
+	afx_msg void OnBnClickedButtonDatRedisplay();
+//	CString m_Edit_ReDisp_FilePath;
+	CString m_Edit_ReDisp_FilePath;
 };

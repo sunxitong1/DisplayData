@@ -9,6 +9,9 @@
 #include "Pegrpapi.h "
 #include "math.h"
 #include "SerialPort.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 
 
 #ifdef _DEBUG
@@ -32,6 +35,8 @@ public:
 // Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+//	virtual HRESULT accDoDefaultAction(VARIANT varChild);
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
@@ -57,6 +62,7 @@ CDisplayDataDlg::CDisplayDataDlg(CWnd* pParent /*=NULL*/)
 	, m_Edit_save_path(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_Edit_ReDisp_FilePath = _T("");
 }
 
 void CDisplayDataDlg::DoDataExchange(CDataExchange* pDX)
@@ -66,6 +72,7 @@ void CDisplayDataDlg::DoDataExchange(CDataExchange* pDX)
 	//  DDX_CBString(pDX, IDC_COMBO_PORTNUM, m_PortNum);
 	DDX_Control(pDX, IDC_COMBO_BAUD, m_ComBaurate);
 	DDX_Control(pDX, IDC_COMBO_PORTNUM, m_ComPortNum);
+	DDX_Text(pDX, IDC_EDIT_REDISP_FILE_PATH, m_Edit_ReDisp_FilePath);
 }
 
 BEGIN_MESSAGE_MAP(CDisplayDataDlg, CDialogEx)
@@ -77,6 +84,7 @@ BEGIN_MESSAGE_MAP(CDisplayDataDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_COM_OPEN, &CDisplayDataDlg::OnBnClickedButtonComOpen)
 	ON_MESSAGE(WM_COMM_RXCHAR,OnComm)
 	ON_BN_CLICKED(IDC_BUTTON_DAT_SAVE, &CDisplayDataDlg::OnBnClickedButtonDatSave)
+	ON_BN_CLICKED(IDC_BUTTON_DAT_REDISPLAY, &CDisplayDataDlg::OnBnClickedButtonDatRedisplay)
 END_MESSAGE_MAP()
 
 
@@ -114,87 +122,19 @@ BOOL CDisplayDataDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 	m_hPE = NULL;
 
-	RECT rect;
+	
 
 		//获取图像显示范围
 	//RECT rect;
 	CStatic *pST=(CStatic *)GetDlgItem(IDC_STATIC_DISP);
-	pST->GetWindowRect(&rect);
-	ScreenToClient(&rect);
+	pST->GetWindowRect(&m_rect);
+	ScreenToClient(&m_rect);
 	//UpdateData(TRUE);
    //GetClientRect( &rect );
 
-    m_hPE = PEcreate(PECONTROL_SGRAPH, WS_VISIBLE, &rect, m_hWnd, 1001);
-
-   PEnset(m_hPE, PEP_nSUBSETS, 1);
-   PEnset(m_hPE, PEP_nPOINTS, 300);
-
-   // Set Manual Y scale //
-   PEnset(m_hPE, PEP_nMANUALSCALECONTROLY, PEMSC_MINMAX);
-   double arg = 1.0F;
-   PEvset(m_hPE, PEP_fMANUALMINY, &arg, 1);
-   arg = 300.0F;
-   PEvset(m_hPE, PEP_fMANUALMAXY, &arg, 1);
-
-   // Set Manual X scale //
-   PEnset(m_hPE, PEP_nMANUALSCALECONTROLX, PEMSC_MINMAX);
-   arg = 1.0F;
-   PEvset(m_hPE, PEP_fMANUALMINX, &arg, 1);
-   arg = 300;
-   PEvset(m_hPE, PEP_fMANUALMAXX, &arg, 1);
-
-   // Clear out default data //
-   float val = 0;
-   PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 0, &val);
-   PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 1, &val);
-   PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 2, &val);
-   PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 3, &val);
-
-   PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 0, &val);
-   PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 1, &val);
-   PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 2, &val);
-   PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 3, &val);
-
-   // Set Various Other Properties ///
-   PEnset(m_hPE, PEP_bBITMAPGRADIENTMODE, FALSE);
-   PEnset(m_hPE, PEP_nQUICKSTYLE, PEQS_MEDIUM_INSET);
-
-   PEszset(m_hPE, PEP_szMAINTITLE, TEXT("数据实时监控"));
-
-   PEszset(m_hPE, PEP_szSUBTITLE, TEXT(""));
-   PEnset(m_hPE, PEP_bNORANDOMPOINTSTOEXPORT, TRUE);
-   PEnset(m_hPE, PEP_bFOCALRECT, FALSE);
-   PEnset(m_hPE, PEP_bALLOWBAR, FALSE);
-   PEnset(m_hPE, PEP_bALLOWPOPUP, FALSE);
-   PEnset(m_hPE, PEP_bPREPAREIMAGES, TRUE);
-   PEnset(m_hPE, PEP_bCACHEBMP, TRUE);
-   PEnset(m_hPE, PEP_bFIXEDFONTS, TRUE);
-
-   DWORD col = PERGB( 255,0, 198, 0);
-   PEvsetcell(m_hPE, PEP_dwaSUBSETCOLORS, 0, &col);
-
-   PEnset(m_hPE, PEP_nGRADIENTBARS, 8);
-   PEnset(m_hPE, PEP_nTEXTSHADOWS, PETS_BOLD_TEXT);
-   PEnset(m_hPE, PEP_bMAINTITLEBOLD, TRUE);
-   PEnset(m_hPE, PEP_bSUBTITLEBOLD, TRUE);
-   PEnset(m_hPE, PEP_bLABELBOLD, TRUE);
-   PEnset(m_hPE, PEP_bLINESHADOWS, TRUE);
-   PEnset(m_hPE, PEP_nFONTSIZE, PEFS_MEDIUM);
-
-   // Improves metafile export //
-   PEnset(m_hPE, PEP_nDPIX, 600);
-   PEnset(m_hPE, PEP_nDPIY, 600);
-
-   PEreinitialize(m_hPE);
-   PEresetimage(m_hPE, 0, 0);
-
-   // Demo's Logic controlling RenderEngine // 
-   CMDIFrameWnd* pWnd = (CMDIFrameWnd*) AfxGetApp()->GetMainWnd();
-   //pWnd->SendMessage(WM_CHANGE_METAFILE, PEPLAYMETAFILE );
-   	m_nRealTimeCounter = 1;
-	m_nSinCounter = 1;
    
-
+   StaticDisplay_Init();
+  
 
 //设置默认路径
    	m_Edit_save_path = _T("d:\\DataSample.txt"); 
@@ -279,7 +219,7 @@ void CDisplayDataDlg::OnTimer(UINT_PTR nIDEvent)
 	float newx;
 
 //数据存储
-	CString str=_T(""); 
+//		CString str=_T(""); 
 
 
 	// TODO: Add your message handler code here and/or call default
@@ -312,20 +252,27 @@ void CDisplayDataDlg::OnTimer(UINT_PTR nIDEvent)
    PEresetimage( m_hPE, 0, 0 );
    ::InvalidateRect(m_hPE, NULL, FALSE);
 
+
    if(m_bStartSave)
    {
 	  //格式转换
-	   str.Format("%d",nDisplayData);
+	  	nDisplayData++;
+		if((nDisplayData >= 500)||(nDisplayData < (-500)))
+		nDisplayData = 0;
+	
+//		   str.Format("%d",nDisplayData);
 
 	   //保存到文件
 	   if(m_Edit_save_path.Right(4) != ".TXT")
 		   m_Edit_save_path += ".TXT";
-	   FILE *m_pSavefp = fopen(m_Edit_save_path,"a+t");
-//		   CTime time=CTime::GetCurrentTime(); 
-//		   CString tstr =time.Format("%m月%d日 %H:%M:%S   ");
-//		   tstr += str;
-	   fprintf(m_pSavefp,"%s\n",str);
-	   fclose(m_pSavefp);
+	   
+		CStdioFile m_pSavefp;
+		if(m_pSavefp.Open(m_Edit_save_path, CFile::modeCreate | CFile::modeWrite | CFile::typeText))
+		{
+			m_pSavefp.Write(&nDisplayData, 1);
+			m_pSavefp.Close();
+		}
+
    }
 
 
@@ -367,7 +314,7 @@ void CDisplayDataDlg::OnBnClickedButtonComOpen()
 	{
 		m_SerialComm.ClosePort();
 		nPortOpened = FALSE;
-		KillTimer(1);
+		
 		SetDlgItemText(IDC_BUTTON_COM_OPEN,_T("打开"));
 	}
 	else //打开串口
@@ -377,7 +324,7 @@ void CDisplayDataDlg::OnBnClickedButtonComOpen()
 			m_SerialComm.StartMonitoring();
 			nPortOpened = TRUE;
 			   // Initialize Counters and Timer 
-			SetTimer( 1, 1, NULL );
+			
 
 			SetDlgItemText(IDC_BUTTON_COM_OPEN,_T("关闭"));
 		}
@@ -397,11 +344,6 @@ LONG CDisplayDataDlg::OnComm(WPARAM ch, LPARAM port)
 {
 //		nRecBuf[nRecIndex++] = ch;
 	nDisplayData = ch;
-//	TRACE("------%d----\n",ch);
-//		nRecIndex++;
-	
-//		if(nRecIndex >=10)
-//			nRecIndex = 0;
 	return 0;
 }
 
@@ -410,7 +352,279 @@ void CDisplayDataDlg::OnBnClickedButtonDatSave()
 	// TODO: Add your control notification handler code here
 	m_bStartSave = !m_bStartSave;
 	if(m_bStartSave)
+	{
+	
 		SetDlgItemText(IDC_BUTTON_DAT_SAVE,_T("停止存储"));
+		RealtimeDisplay_Init();
+	
+		  
+		SetTimer( 1, 1, NULL );
+	}
 	else
+	{
+		KillTimer(1);
 		SetDlgItemText(IDC_BUTTON_DAT_SAVE,_T("开始存储"));
+	}
+}
+
+
+//HRESULT CAboutDlg::accDoDefaultAction(VARIANT varChild)
+//{
+//	// TODO: Add your specialized code here and/or call the base class
+//
+//	return CDialogEx::accDoDefaultAction(varChild);
+//}
+
+
+void CDisplayDataDlg::RealtimeDisplay_Init(void)
+{
+		m_hPE = PEcreate(PECONTROL_SGRAPH, WS_VISIBLE, &m_rect, m_hWnd, 1001);
+		PEnset(m_hPE, PEP_nSUBSETS, 1);
+		PEnset(m_hPE, PEP_nPOINTS, 300);
+
+		// Set Manual Y scale //
+		PEnset(m_hPE, PEP_nMANUALSCALECONTROLY, PEMSC_MINMAX);
+		double arg = 1.0F;
+		PEvset(m_hPE, PEP_fMANUALMINY, &arg, 1);
+		arg = 300.0F;
+		PEvset(m_hPE, PEP_fMANUALMAXY, &arg, 1);
+
+		// Set Manual X scale //
+		PEnset(m_hPE, PEP_nMANUALSCALECONTROLX, PEMSC_MINMAX);
+		arg = 1.0F;
+		PEvset(m_hPE, PEP_fMANUALMINX, &arg, 1);
+		arg = 300;
+		PEvset(m_hPE, PEP_fMANUALMAXX, &arg, 1);
+
+		// Clear out default data //
+		float val = 0;
+		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 0, &val);
+		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 1, &val);
+		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 2, &val);
+		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 3, &val);
+
+		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 0, &val);
+		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 1, &val);
+		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 2, &val);
+		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 3, &val);
+
+		// Set Various Other Properties ///
+		PEnset(m_hPE, PEP_bBITMAPGRADIENTMODE, FALSE);
+		PEnset(m_hPE, PEP_nQUICKSTYLE, PEQS_MEDIUM_INSET);
+
+		PEszset(m_hPE, PEP_szMAINTITLE, TEXT("数据实时监控"));
+
+		PEszset(m_hPE, PEP_szSUBTITLE, TEXT(""));
+		PEnset(m_hPE, PEP_bNORANDOMPOINTSTOEXPORT, TRUE);
+		PEnset(m_hPE, PEP_bFOCALRECT, FALSE);
+		PEnset(m_hPE, PEP_bALLOWBAR, FALSE);
+		PEnset(m_hPE, PEP_bALLOWPOPUP, FALSE);
+		PEnset(m_hPE, PEP_bPREPAREIMAGES, TRUE);
+		PEnset(m_hPE, PEP_bCACHEBMP, TRUE);
+		PEnset(m_hPE, PEP_bFIXEDFONTS, TRUE);
+
+		DWORD col = PERGB( 255,0, 198, 0);
+		PEvsetcell(m_hPE, PEP_dwaSUBSETCOLORS, 0, &col);
+
+		PEnset(m_hPE, PEP_nGRADIENTBARS, 8);
+		PEnset(m_hPE, PEP_nTEXTSHADOWS, PETS_BOLD_TEXT);
+		PEnset(m_hPE, PEP_bMAINTITLEBOLD, TRUE);
+		PEnset(m_hPE, PEP_bSUBTITLEBOLD, TRUE);
+		PEnset(m_hPE, PEP_bLABELBOLD, TRUE);
+		PEnset(m_hPE, PEP_bLINESHADOWS, TRUE);
+		PEnset(m_hPE, PEP_nFONTSIZE, PEFS_MEDIUM);
+
+		// Improves metafile export //
+		PEnset(m_hPE, PEP_nDPIX, 600);
+		PEnset(m_hPE, PEP_nDPIY, 600);
+
+		PEreinitialize(m_hPE);
+		PEresetimage(m_hPE, 0, 0);
+
+		// Demo's Logic controlling RenderEngine // 
+		//CMDIFrameWnd* pWnd = (CMDIFrameWnd*) AfxGetApp()->GetMainWnd();
+		//pWnd->SendMessage(WM_CHANGE_METAFILE, PEPLAYMETAFILE );
+		m_nRealTimeCounter = 1;
+		m_nSinCounter = 1;
+}
+
+
+void CDisplayDataDlg::StaticDisplay_Init(void)
+{
+	m_hPE = PEcreate(PECONTROL_SGRAPH, WS_VISIBLE, &m_rect, m_hWnd, 1001);
+	if( m_hPE )
+   {
+       float fY;
+       float fX;
+		
+       // Enable middle mouse dragging //
+       PEnset(m_hPE, PEP_bMOUSEDRAGGINGX, TRUE);
+       PEnset(m_hPE, PEP_bMOUSEDRAGGINGY, TRUE);
+
+       // Enable Bar Glass Effect //
+       PEnset(m_hPE, PEP_bBARGLASSEFFECT, TRUE);
+
+       // Enable Plotting style gradient and bevel features //
+       PEnset(m_hPE, PEP_nAREAGRADIENTSTYLE,  PEPGS_RADIAL_BOTTOM_RIGHT);
+       PEnset(m_hPE, PEP_nAREABEVELSTYLE, PEBS_MEDIUM_SMOOTH);
+       PEnset(m_hPE, PEP_nSPLINEGRADIENTSTYLE,  PEPGS_RADIAL_BOTTOM_RIGHT);
+       PEnset(m_hPE, PEP_nSPLINEBEVELSTYLE, PESBS_MEDIUM_SMOOTH);
+
+       // Set number of Subsets and Points //
+       PEnset(m_hPE, PEP_nSUBSETS, 4);	
+       PEnset(m_hPE, PEP_nPOINTS, 12);	
+
+       for( int s=0; s<=3; s++ )
+       {
+           for( int p=0; p<=11; p++ )
+           {										  
+               fX = ((float) (p+1)) * 100.0F;// + ((float) GetRandom(2, 250)) / 50.0F;
+               PEvsetcellEx (m_hPE, PEP_faXDATA, s, p, &fX);
+               fY = ((float) (p+1) * 1.0F) + 700.0F - ((float) (s * 140.0F));// + ((float) GetRandom(2, 250)) / 250.0F;
+               PEvsetcellEx (m_hPE, PEP_faYDATA, s, p, &fY);
+           }
+       }
+
+       // Set DataShadows to show shadows
+       PEnset(m_hPE, PEP_nDATASHADOWS, PEDS_SHADOWS);
+
+       PEszset(m_hPE, PEP_szMAINTITLE, TEXT("Example Data"));
+       PEszset(m_hPE, PEP_szSUBTITLE, TEXT("")); // no subtitle
+       PEszset(m_hPE, PEP_szYAXISLABEL, TEXT("Units Sold"));
+       PEszset(m_hPE, PEP_szXAXISLABEL, TEXT("Month"));
+       PEnset(m_hPE, PEP_bFOCALRECT, FALSE);
+       PEnset(m_hPE, PEP_bPREPAREIMAGES, TRUE);
+       PEnset(m_hPE, PEP_bCACHEBMP, TRUE);
+       PEnset(m_hPE, PEP_nPLOTTINGMETHOD, PEGPM_SPLINE);
+       PEnset(m_hPE, PEP_nGRIDLINECONTROL, PEGLC_BOTH);
+       PEnset(m_hPE, PEP_nGRIDSTYLE, PEGS_DOT);
+       PEnset(m_hPE, PEP_nALLOWZOOMING, PEAZ_HORZANDVERT);
+       PEnset(m_hPE, PEP_nZOOMSTYLE, PEZS_RO2_NOT);
+
+       // subset labels
+       PEvsetcell( m_hPE, PEP_szaSUBSETLABELS, 0, TEXT("Texas"));
+       PEvsetcell( m_hPE, PEP_szaSUBSETLABELS, 1, TEXT("Florida" ));
+       PEvsetcell( m_hPE, PEP_szaSUBSETLABELS, 2, TEXT("Washington" ));
+       PEvsetcell( m_hPE, PEP_szaSUBSETLABELS, 3, TEXT("California" ));
+
+       // subset colors
+       DWORD dwArray[4] = { PERGB(128,198,0,0), PERGB(128, 0, 198, 198 ), PERGB(128, 198,198,0 ), PERGB(128, 0,198,0 ) };
+       PEvsetEx( m_hPE, PEP_dwaSUBSETCOLORS, 0, 4, dwArray, 0 );
+
+       // subset line types
+       int nLineTypes[] = { PELT_MEDIUMSOLID, PELT_MEDIUMSOLID, PELT_MEDIUMSOLID, PELT_MEDIUMSOLID };
+       PEvset(m_hPE, PEP_naSUBSETLINETYPES, nLineTypes, 4);
+
+       // subset point types
+       int nPointTypes[] = { PEPT_DOTSOLID, PEPT_UPTRIANGLESOLID, PEPT_SQUARESOLID, PEPT_DOWNTRIANGLESOLID };
+       PEvset(m_hPE, PEP_naSUBSETPOINTTYPES, nPointTypes, 4);
+
+       // Version 4.0 Features //
+       PEnset(m_hPE, PEP_bFIXEDFONTS, TRUE);
+       PEnset(m_hPE, PEP_bSIMPLEPOINTLEGEND, TRUE);
+       PEnset(m_hPE, PEP_bSIMPLELINELEGEND, TRUE);
+       PEnset(m_hPE, PEP_nLEGENDSTYLE, PELS_1_LINE);
+       PEnset(m_hPE, PEP_nMULTIAXISSTYLE, PEMAS_SEPARATE_AXES);
+
+       // Set Various Other Properties //
+       PEnset(m_hPE, PEP_bBITMAPGRADIENTMODE, TRUE);
+       PEnset(m_hPE, PEP_nQUICKSTYLE, PEQS_MEDIUM_NO_BORDER);
+
+       PEnset(m_hPE, PEP_nGRADIENTBARS, 8);
+       PEnset(m_hPE, PEP_nTEXTSHADOWS, PETS_BOLD_TEXT);
+       PEnset(m_hPE, PEP_bMAINTITLEBOLD, TRUE);
+       PEnset(m_hPE, PEP_bSUBTITLEBOLD, TRUE);
+       PEnset(m_hPE, PEP_bLABELBOLD, TRUE);
+       PEnset(m_hPE, PEP_bLINESHADOWS, TRUE);
+       PEnset(m_hPE, PEP_nFONTSIZE, PEFS_LARGE);
+       PEnset(m_hPE, PEP_bSCROLLINGHORZZOOM, TRUE);
+       PEnset(m_hPE, PEP_nDATAPRECISION, 1);
+
+       // Improves metafile export //
+       PEnset(m_hPE, PEP_nDPIX, 600);
+       PEnset(m_hPE, PEP_nDPIY, 600);
+
+       // Set Demo's RenderEngine to Gdi Plus // 
+       //CMDIFrameWnd* pWnd = (CMDIFrameWnd*) AfxGetApp()->GetMainWnd();
+      // pWnd->SendMessage(WM_CHANGE_METAFILE, PEPLAYMETAFILEGDIPLUS );
+   }
+
+		
+}
+
+void CDisplayDataDlg::OnBnClickedButtonDatRedisplay()
+{
+	// TODO: Add your control notification handler code here
+	
+	if(!m_bStartSave)//不在实时显示状态
+	{
+		//图像框图初始化
+		StaticDisplay_Init();
+		//读取文件路径
+		TCHAR szFilters[]= _T("Txt Files (*.txt)|*.TXT|All Files (*.*)|*.*||");
+		
+		// Create an Open dialog; the default file name extension is ".my".
+		CFileDialog fileDlg(TRUE, _T("*"), _T("*.TXT"),
+		   OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, szFilters);
+		
+		// Display the file dialog. When user clicks OK, fileDlg.DoModal()	
+		// returns IDOK. 
+		 if(fileDlg.DoModal() == IDOK)						 //判断是否按下"打开"按钮
+		 {
+			 m_Edit_ReDisp_FilePath = fileDlg.GetPathName();				 //获得文件路径
+			 UpdateData(FALSE);
+		 }
+
+
+		 
+		//文件读取
+		CStdioFile fileWave;
+		int m_iWavePointCnt;//
+		int m_iData = 0;
+		if(fileWave.Open(m_Edit_ReDisp_FilePath,CFile::typeText|CFile::modeReadWrite))
+		{
+			m_iWavePointCnt = fileWave.GetLength();
+			m_iWavePointCnt = 10;
+			fileWave.SeekToBegin();
+			for(int i=0;i<m_iWavePointCnt;i++)
+			{
+				fileWave.Read(&m_iData, 1);
+//					TRACE("------%d----\n",m_iWavePointCnt);
+				TRACE("------%d----\n",m_iData);
+				
+			}
+				
+			
+		}
+
+		
+//	
+//				CString strText ="";
+//	
+//				CString szLine = "";
+//	
+//				//打开文件
+//				CStdioFile file;
+//	
+//				file.Open("ts.txt",CFile::modeRead);
+//	
+//				//逐行读取字符串
+//	
+//				while( file.ReadString( szLine ) )
+//	
+//				{
+//					strText += szLine;
+//				}
+//	
+//				MessageBox(strText);
+//	
+//				//关闭文件
+//	
+//				file.Close();
+
+	}
+
+	else
+		AfxMessageBox(_T("请关闭实时显示"));
+		
 }
