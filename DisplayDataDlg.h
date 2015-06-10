@@ -5,6 +5,7 @@
 #pragma once
 #include "afxwin.h"
 #include "SerialPort.h"
+#define DISP_DATA_NUMS	2 
 
 
 // CDisplayDataDlg dialog
@@ -29,7 +30,9 @@ public:
 	int nPortOpened;
 //		int nRecBuf[20];
 //		int nRecIndex;
-	int nDisplayData;
+	int nDisplayData[DISP_DATA_NUMS];
+	int nDispDataIndex;
+	
 
 //Êý¾Ý´æ´¢
 	int m_bStartSave;

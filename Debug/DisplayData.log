@@ -1,4 +1,4 @@
-﻿Build started 2015/6/8 17:43:33.
+﻿Build started 2015/6/10 17:20:20.
      1>Project "D:\WorkSpace\DisplayData\DisplayData\DisplayData.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\DisplayData.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -8,8 +8,13 @@
          DisplayDataDlg.cpp
      1>d:\workspace\displaydata\displaydata\pegrpapi.h(2618): warning C4005: “PEserializetofile”: 宏重定义
                  d:\workspace\displaydata\displaydata\pegrpapi.h(2542) : 参见“PEserializetofile”的前一个定义
-     1>d:\workspace\displaydata\displaydata\displaydatadlg.cpp(232): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-     1>d:\workspace\displaydata\displaydata\displaydatadlg.cpp(586): warning C4244: “=”: 从“ULONGLONG”转换到“int”，可能丢失数据
+     1>d:\workspace\displaydata\displaydata\displaydatadlg.cpp(286): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+     1>d:\workspace\displaydata\displaydata\displaydatadlg.cpp(287): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+     1>d:\workspace\displaydata\displaydata\displaydatadlg.cpp(308): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 e:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234) : 参见“fopen”的声明
+     1>d:\workspace\displaydata\displaydata\displaydatadlg.cpp(276): warning C4101: “r1”: 未引用的局部变量
+     1>d:\workspace\displaydata\displaydata\displaydatadlg.cpp(276): warning C4101: “r2”: 未引用的局部变量
+     1>d:\workspace\displaydata\displaydata\displaydatadlg.cpp(714): warning C4244: “=”: 从“ULONGLONG”转换到“int”，可能丢失数据
        ResourceCompile:
          All outputs are up-to-date.
        ManifestResourceCompile:
@@ -35,4 +40,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:08.10
+Time Elapsed 00:00:12.33

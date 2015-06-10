@@ -7,11 +7,20 @@
 #include "DisplayDataDlg.h"
 #include "afxdialogex.h"
 #include "Pegrpapi.h "
+
 #include "math.h"
 #include "SerialPort.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
+#include "stdlib.h"
+#include "stdio.h"
+#include "time.h"
+
+#define GetRandom( min, max ) ((rand() % (int)(((max) + 1) - (min))) + (min))
+
+
+
+#define X_AXIS_LEN 600
+
+#define Y_AXIS_LEN 600
 
 
 #ifdef _DEBUG
@@ -121,8 +130,10 @@ BOOL CDisplayDataDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	m_hPE = NULL;
+	nDispDataIndex= 0;
+	for(int i=0;i<DISP_DATA_NUMS;i++)
+		nDisplayData[i] = 0;
 
-	
 
 		//获取图像显示范围
 	//RECT rect;
@@ -132,9 +143,10 @@ BOOL CDisplayDataDlg::OnInitDialog()
 	//UpdateData(TRUE);
    //GetClientRect( &rect );
 
-   
-   StaticDisplay_Init();
+   RealtimeDisplay_Init();
+//	   StaticDisplay_Init();
   
+  //D:\Material\Current Project\mathwork
 
 //设置默认路径
    	m_Edit_save_path = _T("d:\\DataSample.txt"); 
@@ -214,68 +226,106 @@ HCURSOR CDisplayDataDlg::OnQueryDragIcon()
 
 void CDisplayDataDlg::OnTimer(UINT_PTR nIDEvent)
 {
-//图像保存
-	float newy;
-	float newx;
-
+//	//	//	//图像保存
+//		float newy;
+//		float newy2;
+//		float newx;
+//		
 //数据存储
-//		CString str=_T(""); 
+	CString str=_T(""); 
+	CString str2=_T(""); 
 
-
-	// TODO: Add your message handler code here and/or call default
-		newy = (float)nDisplayData;
+//		// TODO: Add your message handler code here and/or call default
+//		newy = (float)nDisplayData[0];
+//		newy = (float)nDisplayData[0];
+//		newy2 = (float)nDisplayData[1];
 	 // New y value //
-//	   newy = (float)(50.0F + (sin((double) m_nSinCounter * 0.075F) * 30.0F));// + GetRandom(1, 15);
-
-  
-   //newy = 50.0F + (sin((double) m_nSinCounter * 0.075F) * 30.0F) + GetRandom(1, 15);
-   newx = m_nRealTimeCounter;
+//	   newx = m_nRealTimeCounter;
 
      // Append new values  //
-   PEvset(m_hPE, PEP_faAPPENDYDATA, &newy, 1);
-   PEvset(m_hPE, PEP_faAPPENDXDATA, &newx, 1);
+//	   PEvset(m_hPE, PEP_faAPPENDYDATA, &newy, 1);
+//	   PEvset(m_hPE, PEP_faAPPENDXDATA, &newx, 1);
+//	   PEvset(m_hPE, PEP_faAPPENDYDATA, &newy2, 2);
+//	   PEvset(m_hPE, PEP_faAPPENDXDATA, &newx, 2);
+//	
+//	//		// Store new values at current index //
+//	//		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, m_nRealTimeCounter, &newx);
+//	//		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, m_nRealTimeCounter, &newy);
+//	//		 
+//	//		// Store new values at current index //
+//	//		PEvsetcellEx(m_hPE, PEP_faXDATA, 1, m_nRealTimeCounter, &newx);
+//	//		PEvsetcellEx(m_hPE, PEP_faYDATA, 1, m_nRealTimeCounter, &newy);
+//	
+//	   // Increment counter //
+//	   m_nRealTimeCounter = m_nRealTimeCounter + 1;
+//	
+//	   // Switch to AutoScaling x axis after receiving 100 data points //
+//	   if (m_nRealTimeCounter == X_AXIS_LEN)
+//	       PEnset(m_hPE, PEP_nMANUALSCALECONTROLX, PEMSC_NONE);
+//	
+//	   // SinCounter is only to produce sin wave data //
+//	   m_nSinCounter = m_nSinCounter + 1;
+//	   if (m_nSinCounter > 30000) 
+//	       m_nSinCounter = 0;
 
-   // Increment counter //
-   m_nRealTimeCounter = m_nRealTimeCounter + 1;
+//	   // Update image and force paint //
+//	   PEreinitialize( m_hPE );
+//	   PEresetimage( m_hPE, 0, 0 );
+//	   ::InvalidateRect(m_hPE, NULL, FALSE);
 
-   // Switch to AutoScaling x axis after receiving 100 data points //
-   if (m_nRealTimeCounter == 300)
-       PEnset(m_hPE, PEP_nMANUALSCALECONTROLX, PEMSC_NONE);
+	float r1,r2,fNew[2];
+	CTime t;
+	CString ttext;
 
-   // SinCounter is only to produce sin wave data //
-   m_nSinCounter = m_nSinCounter + 1;
-   if (m_nSinCounter > 30000) 
-       m_nSinCounter = 1;
+	t = CTime::GetCurrentTime();
+	ttext = t.Format("%M:%S");
 
-   // Update image and force paint //
-   PEreinitialize( m_hPE );
-   PEresetimage( m_hPE, 0, 0 );
-   ::InvalidateRect(m_hPE, NULL, FALSE);
+	// Graph Real Time Feed //
+	PEvset(m_hPE, PEP_szaAPPENDPOINTLABELDATA, (void *) (LPCTSTR) ttext, 1);
 
+	fNew[0] =  nDisplayData[0];
+	fNew[1] =  nDisplayData[1];
+
+	PEvset(m_hPE, PEP_faAPPENDYDATA, &fNew[0], 1);
+   
 
    if(m_bStartSave)
    {
 	  //格式转换
-	  	nDisplayData++;
-		if((nDisplayData >= 500)||(nDisplayData < (-500)))
-		nDisplayData = 0;
+	  	nDisplayData[0]++;
+		if((nDisplayData[0] >= 500)||(nDisplayData[0] < (-500)))
+		nDisplayData[0] = 0;
+
+		nDisplayData[1] = nDisplayData[0]+50;;
 	
-//		   str.Format("%d",nDisplayData);
+	   str.Format("%d",nDisplayData[0]);
+	   str2.Format("%d",(nDisplayData[1]));
 
 	   //保存到文件
 	   if(m_Edit_save_path.Right(4) != ".TXT")
 		   m_Edit_save_path += ".TXT";
-	   
-		CStdioFile m_pSavefp;
-		if(m_pSavefp.Open(m_Edit_save_path, CFile::modeCreate | CFile::modeWrite | CFile::typeText))
-		{
-			m_pSavefp.Write(&nDisplayData, 1);
-			m_pSavefp.Close();
-		}
+
+		FILE *m_pSavefp = fopen(m_Edit_save_path,"a+t");
+		//		   CTime time=CTime::GetCurrentTime(); 
+		//		   CString tstr =time.Format("%m??%d?? %H:%M:%S   ");
+		//		   tstr += str;
+		fprintf(m_pSavefp,"%s\t",str);//第一列数据
+		fprintf(m_pSavefp,"%s\n",str2);//第二列数据
+		fclose(m_pSavefp);
+	   	   
+//			CStdioFile m_pSavefp;
+//			if(m_pSavefp.Open(m_Edit_save_path, CFile::modeCreate | CFile::modeWrite | CFile::typeText))
+//			{
+//	//				m_pSavefp.Write(&nDisplayData, 1);
+//	//				m_pSavefp.Close();
+//					char pbufWrite[100];
+//					memset(pbufWrite, 'a', sizeof(pbufWrite));
+//					m_pSavefp.Write(pbufWrite, 100);         
+//					m_pSavefp.Flush();
+//	
+//			}
 
    }
-
-
 
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -324,8 +374,6 @@ void CDisplayDataDlg::OnBnClickedButtonComOpen()
 			m_SerialComm.StartMonitoring();
 			nPortOpened = TRUE;
 			   // Initialize Counters and Timer 
-			
-
 			SetDlgItemText(IDC_BUTTON_COM_OPEN,_T("关闭"));
 		}
 		else
@@ -334,7 +382,6 @@ void CDisplayDataDlg::OnBnClickedButtonComOpen()
 			nPortOpened = FALSE;
 			SetDlgItemText(IDC_BUTTON_COM_OPEN,_T("打开"));
 		}
-		
 	}
 
 
@@ -343,7 +390,11 @@ void CDisplayDataDlg::OnBnClickedButtonComOpen()
 LONG CDisplayDataDlg::OnComm(WPARAM ch, LPARAM port)
 {
 //		nRecBuf[nRecIndex++] = ch;
-	nDisplayData = ch;
+	nDisplayData[nDispDataIndex++] = ch;
+
+	if(nDispDataIndex >= DISP_DATA_NUMS)
+		nDispDataIndex = 0;
+	
 	return 0;
 }
 
@@ -358,7 +409,7 @@ void CDisplayDataDlg::OnBnClickedButtonDatSave()
 		RealtimeDisplay_Init();
 	
 		  
-		SetTimer( 1, 1, NULL );
+		SetTimer( 1, 5, NULL );
 	}
 	else
 	{
@@ -378,68 +429,145 @@ void CDisplayDataDlg::OnBnClickedButtonDatSave()
 
 void CDisplayDataDlg::RealtimeDisplay_Init(void)
 {
-		m_hPE = PEcreate(PECONTROL_SGRAPH, WS_VISIBLE, &m_rect, m_hWnd, 1001);
-		PEnset(m_hPE, PEP_nSUBSETS, 1);
-		PEnset(m_hPE, PEP_nPOINTS, 300);
+//			m_hPE = PEcreate(PECONTROL_SGRAPH, WS_VISIBLE, &m_rect, m_hWnd, 1001);
+//			PEnset(m_hPE, PEP_nSUBSETS, 2);
+//			PEnset(m_hPE, PEP_nPOINTS, X_AXIS_LEN);
+//	
+//			// Set Manual Y scale //
+//			PEnset(m_hPE, PEP_nMANUALSCALECONTROLY, PEMSC_MINMAX);
+//			double arg = 1.0F;
+//			PEvset(m_hPE, PEP_fMANUALMINY, &arg, 1);
+//			arg = Y_AXIS_LEN;
+//			PEvset(m_hPE, PEP_fMANUALMAXY, &arg, 1);
+//	
+//			// Set Manual X scale //
+//			PEnset(m_hPE, PEP_nMANUALSCALECONTROLX, PEMSC_MINMAX);
+//			arg = 0.0F;
+//			PEvset(m_hPE, PEP_fMANUALMINX, &arg, 1);
+//			arg = X_AXIS_LEN;
+//			PEvset(m_hPE, PEP_fMANUALMAXX, &arg, 1);
+//	
+//			// Clear out default data //
+//			float val = 0;
+//			PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 0, &val);
+//			PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 1, &val);
+//			PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 2, &val);
+//			PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 3, &val);
+//	
+//			PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 0, &val);
+//			PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 1, &val);
+//			PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 2, &val);
+//			PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 3, &val);
+//	
+//			// Set Various Other Properties ///
+//			PEnset(m_hPE, PEP_bBITMAPGRADIENTMODE, FALSE);
+//			PEnset(m_hPE, PEP_nQUICKSTYLE, PEQS_MEDIUM_INSET);
+//	
+//			PEszset(m_hPE, PEP_szMAINTITLE, TEXT("数据实时监控"));
+//	
+//			PEszset(m_hPE, PEP_szSUBTITLE, TEXT(""));
+//			PEnset(m_hPE, PEP_bNORANDOMPOINTSTOEXPORT, TRUE);
+//			PEnset(m_hPE, PEP_bFOCALRECT, FALSE);
+//			PEnset(m_hPE, PEP_bALLOWBAR, FALSE);
+//			PEnset(m_hPE, PEP_bALLOWPOPUP, FALSE);
+//			PEnset(m_hPE, PEP_bPREPAREIMAGES, TRUE);
+//			PEnset(m_hPE, PEP_bCACHEBMP, TRUE);
+//			PEnset(m_hPE, PEP_bFIXEDFONTS, TRUE);
+//	
+//			DWORD col = PERGB( 255,0, 198, 0);
+//			PEvsetcell(m_hPE, PEP_dwaSUBSETCOLORS, 0, &col);
+//	
+//			PEnset(m_hPE, PEP_nGRADIENTBARS, 8);
+//			PEnset(m_hPE, PEP_nTEXTSHADOWS, PETS_BOLD_TEXT);
+//			PEnset(m_hPE, PEP_bMAINTITLEBOLD, TRUE);
+//			PEnset(m_hPE, PEP_bSUBTITLEBOLD, TRUE);
+//			PEnset(m_hPE, PEP_bLABELBOLD, TRUE);
+//			PEnset(m_hPE, PEP_bLINESHADOWS, TRUE);
+//			PEnset(m_hPE, PEP_nFONTSIZE, PEFS_MEDIUM);
+//	
+//	//			// Improves metafile export //
+//	//			PEnset(m_hPE, PEP_nDPIX, 600);
+//	//			PEnset(m_hPE, PEP_nDPIY, 600);
+//	//	
+//	//			PEreinitialize(m_hPE);
+//	//			PEresetimage(m_hPE, 0, 0);
+//	
+//			int dwSC[] = { PERGB(128,0,198,0), PERGB( 128,255,255,255) };
+//			PEvset(m_hPE, PEP_dwaSUBSETCOLORS, dwSC, 2);
+//			
+//			PEnset(m_hPE, PEP_nRENDERENGINE, PERE_HYBRID);
+//			
 
-		// Set Manual Y scale //
-		PEnset(m_hPE, PEP_nMANUALSCALECONTROLY, PEMSC_MINMAX);
-		double arg = 1.0F;
-		PEvset(m_hPE, PEP_fMANUALMINY, &arg, 1);
-		arg = 300.0F;
-		PEvset(m_hPE, PEP_fMANUALMAXY, &arg, 1);
 
-		// Set Manual X scale //
-		PEnset(m_hPE, PEP_nMANUALSCALECONTROLX, PEMSC_MINMAX);
-		arg = 1.0F;
-		PEvset(m_hPE, PEP_fMANUALMINX, &arg, 1);
-		arg = 300;
-		PEvset(m_hPE, PEP_fMANUALMAXX, &arg, 1);
-
-		// Clear out default data //
-		float val = 0;
-		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 0, &val);
-		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 1, &val);
-		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 2, &val);
-		PEvsetcellEx(m_hPE, PEP_faXDATA, 0, 3, &val);
-
-		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 0, &val);
-		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 1, &val);
-		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 2, &val);
-		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 3, &val);
-
-		// Set Various Other Properties ///
-		PEnset(m_hPE, PEP_bBITMAPGRADIENTMODE, FALSE);
-		PEnset(m_hPE, PEP_nQUICKSTYLE, PEQS_MEDIUM_INSET);
-
-		PEszset(m_hPE, PEP_szMAINTITLE, TEXT("数据实时监控"));
-
-		PEszset(m_hPE, PEP_szSUBTITLE, TEXT(""));
-		PEnset(m_hPE, PEP_bNORANDOMPOINTSTOEXPORT, TRUE);
-		PEnset(m_hPE, PEP_bFOCALRECT, FALSE);
-		PEnset(m_hPE, PEP_bALLOWBAR, FALSE);
-		PEnset(m_hPE, PEP_bALLOWPOPUP, FALSE);
+		
+		m_hPE = PEcreate(PECONTROL_GRAPH, WS_VISIBLE, &m_rect, m_hWnd, 1001);
+		
+		// No Shadows //
+		PEnset(m_hPE, PEP_nDATASHADOWS, PEDS_NONE);
+		
+		// No Flicker //
 		PEnset(m_hPE, PEP_bPREPAREIMAGES, TRUE);
 		PEnset(m_hPE, PEP_bCACHEBMP, TRUE);
+		
+		// Set Subsets and Points //
+		PEnset(m_hPE, PEP_nSUBSETS, 2); 	 // set number of subsets
+		// Set number data points
+		PEnset(m_hPE, PEP_nPOINTS, 600); // number of data points	 
+		
+		PEnset(m_hPE, PEP_nPOINTSTOGRAPH, 100);
+		PEnset(m_hPE, PEP_nPOINTSTOGRAPHINIT, PEPTGI_LASTPOINTS);			 
+//			PEnset(m_hPE, PEP_nPLOTTINGMETHOD, PEGPM_AREA);    
+		PEnset(m_hPE, PEP_nPLOTTINGMETHOD, PEGPM_POINTSPLUSLINE);
+
+		
+		// main title
+		PEszset(m_hPE, PEP_szMAINTITLE, TEXT("Graph Real Time"));
+		PEszset(m_hPE, PEP_szSUBTITLE, TEXT("")); // no subtitle
+		
+		// Manually configure scales //
+		PEnset(m_hPE, PEP_nMANUALSCALECONTROLY, PEMSC_MINMAX);
+		
+		double manminY = 0.0F;
+		PEvset(m_hPE, PEP_fMANUALMINY, &manminY, 1);
+		double manmaxY = 600.0F;
+		PEvset(m_hPE, PEP_fMANUALMAXY, &manmaxY, 1);
+		
+		PEszset(m_hPE, PEP_szMANUALMAXPOINTLABEL, TEXT("000.000" ));
+		PEszset(m_hPE, PEP_szMANUALMAXDATASTRING, TEXT("00:00:00xx"));
+		
+		PEnset(m_hPE, PEP_bNOSTACKEDDATA, TRUE); 
+		PEnset(m_hPE, PEP_bNORANDOMPOINTSTOGRAPH, TRUE);
+		PEnset(m_hPE, PEP_bALLOWHISTOGRAM, FALSE);	 
+		PEnset(m_hPE, PEP_bFOCALRECT, FALSE);
+		PEnset(m_hPE, PEP_nGRIDLINECONTROL, FALSE);
+		PEnset(m_hPE, PEP_nDATAPRECISION, 1);									   
+		
+		// Needed to allocate point labels so append logic works //
+		// Set last point label, Points - 1 //
+		PEszset(m_hPE, PEP_szaPOINTLABELS, TEXT(""));
+		
+		float f1 = 0.0F;
+		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 0, &f1);
+		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 1, &f1);
+		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 2, &f1);
+		PEvsetcellEx(m_hPE, PEP_faYDATA, 0, 3, &f1);
+		
+		PEnset(m_hPE, PEP_bBITMAPGRADIENTMODE, FALSE);
+		PEnset(m_hPE, PEP_nQUICKSTYLE, PEQS_DARK_NO_BORDER);
 		PEnset(m_hPE, PEP_bFIXEDFONTS, TRUE);
-
-		DWORD col = PERGB( 255,0, 198, 0);
-		PEvsetcell(m_hPE, PEP_dwaSUBSETCOLORS, 0, &col);
-
-		PEnset(m_hPE, PEP_nGRADIENTBARS, 8);
+		
 		PEnset(m_hPE, PEP_nTEXTSHADOWS, PETS_BOLD_TEXT);
 		PEnset(m_hPE, PEP_bMAINTITLEBOLD, TRUE);
 		PEnset(m_hPE, PEP_bSUBTITLEBOLD, TRUE);
 		PEnset(m_hPE, PEP_bLABELBOLD, TRUE);
-		PEnset(m_hPE, PEP_bLINESHADOWS, TRUE);
 		PEnset(m_hPE, PEP_nFONTSIZE, PEFS_MEDIUM);
+		
+		int dwSC[] = { PERGB(128,0,198,0), PERGB( 128,255,255,255) };
+		PEvset(m_hPE, PEP_dwaSUBSETCOLORS, dwSC, 2);
+		
+		PEnset(m_hPE, PEP_nRENDERENGINE, PERE_HYBRID);
+		
 
-		// Improves metafile export //
-		PEnset(m_hPE, PEP_nDPIX, 600);
-		PEnset(m_hPE, PEP_nDPIY, 600);
-
-		PEreinitialize(m_hPE);
-		PEresetimage(m_hPE, 0, 0);
 
 		// Demo's Logic controlling RenderEngine // 
 		//CMDIFrameWnd* pWnd = (CMDIFrameWnd*) AfxGetApp()->GetMainWnd();

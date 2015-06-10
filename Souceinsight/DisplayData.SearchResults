@@ -1,3 +1,3 @@
----- m_Edit_ReDisp_FilePath Matches (2 in 2 files) ----
-DisplayDataDlg.cpp (d:\workspace\displaydata\displaydata):			 m_Edit_ReDisp_FilePath = fileDlg.GetPathName();				 //获得文件路径
-DisplayDataDlg.h (d:\workspace\displaydata\displaydata):	CString m_Edit_ReDisp_FilePath;
+---- PEP_nPOINTGRADIENTSTYLE Matches (2 in 2 files) ----
+DisplayDataDlg.cpp (d:\workspace\displaydata\displaydata):	 PEnset(m_hPE, PEP_nPOINTGRADIENTSTYLE, PEPGS_VERTICAL_ASCENT_INVERSE);
+Pegrpapi.h (d:\workspace\displaydata\displaydata):#define PEP_nPOINTGRADIENTSTYLE                 1938
